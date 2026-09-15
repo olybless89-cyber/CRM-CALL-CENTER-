@@ -1,0 +1,16 @@
+export default () => ({
+  nodeEnv: process.env.NODE_ENV ?? 'development',
+  port: parseInt(process.env.API_PORT ?? '4000', 10),
+  corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:3000',
+  database: {
+    url: process.env.DATABASE_URL,
+  },
+  redis: {
+    url: process.env.REDIS_URL,
+  },
+  jwt: {
+    accessSecret: process.env.JWT_ACCESS_SECRET,
+    accessTtl: process.env.JWT_ACCESS_TTL ?? '15m',
+    refreshTtlDays: parseInt(process.env.JWT_REFRESH_TTL_DAYS ?? '30', 10),
+  },
+});

@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  api:
+    name: API — lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: crm
+          POSTGRES_PASSWORD: crm_dev_password
+          POSTGRES_DB: crm_platform_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U crm"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://crm:crm_dev_password@localhost:5432/crm_platform_test?schema=public
+      REDIS_URL: redis://localhost:6379
+      JWT_ACCESS_SECRET: ci_test_access_secret_at_least_32_chars_long
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate --workspace apps/api
+
+      - name: Apply migrations
+        run: npm run prisma:migrate:deploy --workspace apps/api
+
+      - name: Lint
+        run: npm run lint --workspace apps/api
+
+      - name: Typecheck
+        run: npm run typecheck --workspace apps/api
+
+      - name: Unit tests
+        run: npm run test --workspace apps/api
+
+      - name: Integration (e2e) tests
+        run: npm run test:e2e --workspace apps/api
+
+      - name: Build
+        run: npm run build --workspace apps/api
+
+  web:
+    name: Web — lint, typecheck, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint --workspace apps/web
+
+      - name: Typecheck
+        run: npm run typecheck --workspace apps/web
+
+      - name: Build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:4000/api/v1
+        run: npm run build --workspace apps/web

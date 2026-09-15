@@ -1,0 +1,43 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# build output
+.next/
+dist/
+build/
+out/
+
+# next
+apps/web/.next/
+apps/web/next-env.d.ts
+
+# nest
+apps/api/dist/
+
+# prisma
+apps/api/generated/
+
+# logs
+npm-debug.log*
+*.log
+
+# testing
+coverage/
+
+# misc
+.DS_Store
+*.pem
+.turbo/
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
