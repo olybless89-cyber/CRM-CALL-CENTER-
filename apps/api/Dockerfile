@@ -19,8 +19,10 @@ COPY package.json package-lock.json* ./
 COPY apps/api/package.json apps/api/package.json
 RUN npm ci --workspace apps/api --include-workspace-root --omit=dev
 COPY --from=build /workspace/apps/api/dist apps/api/dist
-COPY --from=build /workspace/apps/api/node_modules/.prisma apps/api/node_modules/.prisma
-COPY --from=build /workspace/apps/api/node_modules/@prisma apps/api/node_modules/@prisma
+# The generated Prisma Client output must sit next to wherever npm
+# hoists @prisma/client in this workspace (the repo-root node_modules),
+# not nested under apps/api, or Node can't resolve it at runtime.
+COPY --from=build /workspace/apps/api/node_modules/.prisma node_modules/.prisma
 COPY apps/api/prisma apps/api/prisma
 
 EXPOSE 4000
