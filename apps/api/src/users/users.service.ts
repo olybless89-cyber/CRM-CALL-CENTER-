@@ -110,7 +110,7 @@ export class UsersService {
       action: 'user.updated',
       entityType: 'User',
       entityId: userId,
-      metadata: dto,
+      metadata: dto as unknown as Record<string, unknown>,
     });
 
     return this.getForTenant(tenantId, user.id);

@@ -38,7 +38,7 @@ export class TenantsService {
       action: 'organization.updated',
       entityType: 'Organization',
       entityId: organization.id,
-      metadata: dto,
+      metadata: dto as unknown as Record<string, unknown>,
     });
 
     return organization;
