@@ -3,9 +3,12 @@
  * engineering brief. Idempotent (safe to re-run) — uses upserts keyed on
  * the unique `key` column.
  */
-import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../generated/prisma-client';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+});
 
 const PERMISSIONS = [
   ['tenants:create', 'Create a new tenant'],
