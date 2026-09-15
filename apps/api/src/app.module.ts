@@ -23,18 +23,16 @@ import { PermissionsGuard } from './common/guards/permissions.guard';
       load: [configuration],
       validate,
     }),
-    LoggerModule.forRootAsync({
-      useFactory: () => ({
-        pinoHttp: {
-          level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-          transport:
-            process.env.NODE_ENV === 'production'
-              ? undefined
-              : { target: 'pino-pretty', options: { singleLine: true } },
-          redact: ['req.headers.authorization'],
-          autoLogging: process.env.NODE_ENV !== 'test',
-        },
-      }),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+        transport:
+          process.env.NODE_ENV === 'production'
+            ? undefined
+            : { target: 'pino-pretty', options: { singleLine: true } },
+        redact: ['req.headers.authorization'],
+        autoLogging: process.env.NODE_ENV !== 'test',
+      },
     }),
     PrismaModule,
     RedisModule,
