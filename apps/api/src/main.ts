@@ -21,8 +21,20 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.API_PORT ?? 4000;
+  const port = resolvePort();
   await app.listen(port);
+}
+
+function resolvePort(): number {
+  for (const candidate of [process.env.PORT, process.env.API_PORT]) {
+    if (candidate && candidate.trim() !== '') {
+      const parsed = Number(candidate);
+      if (Number.isFinite(parsed) && parsed > 0) {
+        return parsed;
+      }
+    }
+  }
+  return 4000;
 }
 
 void bootstrap();
