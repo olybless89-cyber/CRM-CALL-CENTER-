@@ -21,7 +21,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       lazyConnect: false,
       family: 0,
     });
-    this.client.on('error', (err) =>
+    this.client.on('error', (err: NodeJS.ErrnoException) =>
       this.logger.error(
         `Redis error: ${err.message || err.code || err.name || JSON.stringify(err)}`,
         err.stack,
