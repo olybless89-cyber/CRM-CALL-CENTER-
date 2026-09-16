@@ -8,6 +8,12 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["queryCompiler", "driverAdapters"]
+  // Generate into plain app source instead of node_modules/@prisma/client:
+  // npm workspaces hoist @prisma/client to the repo-root node_modules,
+  // which made the Docker runtime-stage copy of the generated output
+  // unreliable. A source-relative path is unambiguous in every context
+  // (local dev, Docker build, Docker runtime). See apps/api/Dockerfile
+  // and .gitignore (apps/api/generated/ is intentionally untracked).
   output          = "../generated/prisma-client"
 }
 
@@ -30,8 +36,8 @@ model Tenant {
   slug      String       @unique
   name      String
   status    TenantStatus @default(ACTIVE)
-  createdAt DateTime     @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime     @updatedAt @db.Timestamptz(6)
+  createdAt DateTime     @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt DateTime     @updatedAt @db.Timestamptz(6) @map("updated_at")
 
   organization Organization?
   users        User[]
@@ -52,8 +58,8 @@ model Organization {
   domain        String?  @unique
   logoUrl       String?  @map("logo_url")
   primaryColor  String?  @map("primary_color")
-  createdAt     DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime @updatedAt @db.Timestamptz(6)
+  createdAt     DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt     DateTime @updatedAt @db.Timestamptz(6) @map("updated_at")
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -80,8 +86,8 @@ model User {
   status          UserStatus @default(ACTIVE)
   emailVerifiedAt DateTime?  @map("email_verified_at") @db.Timestamptz(6)
   lastLoginAt     DateTime?  @map("last_login_at") @db.Timestamptz(6)
-  createdAt       DateTime   @default(now()) @db.Timestamptz(6)
-  updatedAt       DateTime   @updatedAt @db.Timestamptz(6)
+  createdAt       DateTime   @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt       DateTime   @updatedAt @db.Timestamptz(6) @map("updated_at")
 
   tenant                  Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   userRoles               UserRole[]
@@ -110,8 +116,8 @@ model Role {
   name        String
   description String?
   isSystem    Boolean  @default(false) @map("is_system")
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6) @map("updated_at")
 
   tenant          Tenant?          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   rolePermissions RolePermission[]
@@ -125,7 +131,7 @@ model Permission {
   id          String   @id @default(uuid()) @db.Uuid
   key         String   @unique
   description String?
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
 
   rolePermissions RolePermission[]
 
@@ -136,7 +142,7 @@ model RolePermission {
   id           String   @id @default(uuid()) @db.Uuid
   roleId       String   @map("role_id") @db.Uuid
   permissionId String   @map("permission_id") @db.Uuid
-  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  createdAt    DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
 
   role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
@@ -152,7 +158,7 @@ model UserRole {
   roleId           String   @map("role_id") @db.Uuid
   tenantId         String   @map("tenant_id") @db.Uuid
   assignedByUserId String?  @map("assigned_by_user_id") @db.Uuid
-  createdAt        DateTime @default(now()) @db.Timestamptz(6)
+  createdAt        DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
@@ -178,7 +184,7 @@ model AuditLog {
   metadata    Json?
   ipAddress   String?  @map("ip_address")
   userAgent   String?  @map("user_agent")
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
 
   tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   actor  User?   @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
@@ -202,7 +208,7 @@ model RefreshToken {
   replacedByTokenId  String?   @map("replaced_by_token_id") @db.Uuid
   ipAddress          String?   @map("ip_address")
   userAgent          String?   @map("user_agent")
-  createdAt          DateTime  @default(now()) @db.Timestamptz(6)
+  createdAt          DateTime  @default(now()) @db.Timestamptz(6) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -216,7 +222,7 @@ model PasswordResetToken {
   tokenHash  String    @unique @map("token_hash")
   expiresAt  DateTime  @map("expires_at") @db.Timestamptz(6)
   usedAt     DateTime? @map("used_at") @db.Timestamptz(6)
-  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -230,7 +236,7 @@ model EmailVerificationToken {
   tokenHash  String    @unique @map("token_hash")
   expiresAt  DateTime  @map("expires_at") @db.Timestamptz(6)
   usedAt     DateTime? @map("used_at") @db.Timestamptz(6)
-  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
